@@ -120,21 +120,29 @@ function updateLabel(e) {
     }
 }
 
-function saveWebsite() {
-    const htmlContent = `
-        <!DOCTYPE html>
-        <html>
-        ${document.documentElement.innerHTML}
-        </html>
-    `;
+function exportToExcel() {
+    const data = [];
+    const headers = ["Group ID", "Label"];
     
-    const blob = new Blob([htmlContent], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'grid-editor.html';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    // Collect all input values
+    document.querySelectorAll('#spreadsheet input').forEach(input => {
+        const groupId = input.parentNode.querySelector('span').textContent.replace(':', '');
+        data.push({
+            "Group ID": groupId,
+            "Label": input.value
+        });
+    });
+
+    // Sort data by Group ID
+    data.sort((a, b) => a["Group ID"] - b["Group ID"]);
+
+    // Create worksheet
+    const ws = XLSX.utils.json_to_sheet(data, { header: headers });
+    
+    // Create workbook
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Labels");
+    
+    // Export file
+    XLSX.writeFile(wb, "grid-labels.xlsx");
 }

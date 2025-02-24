@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Grid Fortress Editor</title>
     <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
 </head>
 <body>
     <div class="container">
@@ -22,7 +23,7 @@
                 </thead>
                 <tbody id="spreadsheetBody"></tbody>
             </table>
-            <button class="save-btn" onclick="saveWebsite()">Save All</button>
+            <button class="save-btn" onclick="exportToExcel()">Export to Excel</button>
         </div>
     </div>
     <script src="script.js"></script>
