@@ -1,115 +1,140 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const gridSize = 22;
-    const blockSize = 2;
-    const centerStart = Math.floor(gridSize/2) - 1;
-    const gridContainer = document.getElementById('gridContainer');
-    const controls = document.getElementById('controls');
-    let blocks = {};
+    initializeGrid();
+    createGroupOverlays();
+    createSpreadsheet();
+});
 
-    // Create grid blocks
-    for (let row = 0; row < gridSize; row += blockSize) {
-        for (let col = 0; col < gridSize; col += blockSize) {
-            if (row === centerStart && col === centerStart) {
-                createFortress();
+let cellSize;
+const labels = new Map();
+
+function initializeGrid() {
+    const grid = document.getElementById('mainGrid');
+    grid.innerHTML = '';
+    
+    for (let i = 0; i < 22 * 22; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        grid.appendChild(cell);
+    }
+    
+    const tempCell = grid.firstChild;
+    cellSize = tempCell.getBoundingClientRect().width;
+}
+
+function createGroupOverlays() {
+    const container = document.getElementById('gridContainer');
+    const groups = document.createElement('div');
+    groups.id = 'groups';
+    
+    for (let y = 0; y < 11; y++) {
+        for (let x = 0; x < 11; x++) {
+            if (x === 5 && y === 5) {
+                createFortress(container);
                 continue;
             }
             
-            const blockId = `${row}-${col}`;
-            const isCenter = row >= centerStart && row < centerStart + blockSize &&
-                            col >= centerStart && col < centerStart + blockSize;
-            
-            if (!isCenter) {
-                createBlock(blockId, row, col);
-                createControl(blockId);
-            }
+            const group = createGroup(x, y);
+            groups.appendChild(group);
         }
     }
+    
+    container.appendChild(groups);
+}
 
-    function createBlock(id, row, col) {
-        const block = document.createElement('div');
-        block.className = 'gridBlock';
-        block.id = id;
-        block.textContent = blocks[id] || Object.keys(blocks).length + 1;
-        
-        const cellSize = 100 / gridSize;
-        block.style.width = `${cellSize * blockSize}%`;
-        block.style.height = `${cellSize * blockSize}%`;
-        block.style.left = `${col * cellSize}%`;
-        block.style.top = `${row * cellSize}%`;
-        
-        gridContainer.appendChild(block);
-        blocks[id] = block.textContent;
-    }
+function createGroup(x, y) {
+    const group = document.createElement('div');
+    group.className = 'group-overlay';
+    group.style.width = `${cellSize * 2}px`;
+    group.style.height = `${cellSize * 2}px`;
+    group.style.left = `${x * cellSize * 2}px`;
+    group.style.top = `${y * cellSize * 2}px`;
+    
+    const groupId = y * 11 + x + 1;
+    group.textContent = groupId;
+    labels.set(`${x},${y}`, groupId.toString());
+    
+    return group;
+}
 
-    function createFortress() {
-        const fortress = document.createElement('div');
-        fortress.className = 'gridBlock fortress';
-        fortress.textContent = 'Fortress';
-        
-        const cellSize = 100 / gridSize;
-        fortress.style.width = `${cellSize * blockSize}%`;
-        fortress.style.height = `${cellSize * blockSize}%`;
-        fortress.style.left = `${centerStart * cellSize}%`;
-        fortress.style.top = `${centerStart * cellSize}%`;
-        
-        gridContainer.appendChild(fortress);
-    }
+function createFortress(container) {
+    const fortress = document.createElement('div');
+    fortress.id = 'fortress';
+    fortress.className = 'group-overlay';
+    fortress.style.width = `${cellSize * 2}px`;
+    fortress.style.height = `${cellSize * 2}px`;
+    fortress.style.left = `${10 * cellSize}px`;
+    fortress.style.top = `${10 * cellSize}px`;
+    fortress.textContent = 'Fortress';
+    container.appendChild(fortress);
+}
 
-    function createControl(id) {
-        const row = document.createElement('tr');
-        const input = document.createElement('input');
-        input.type = 'text';
-        input.value = blocks[id];
-        
-        input.addEventListener('input', (e) => {
-            const block = document.getElementById(id);
-            block.textContent = e.target.value;
-            blocks[id] = e.target.value;
-        });
+function createSpreadsheet() {
+    const tbody = document.getElementById('spreadsheetBody');
+    tbody.innerHTML = '';
+    let tr;
+    let count = 0;
 
-        row.innerHTML = `<td>${id}</td><td></td>`;
-        row.children[1].appendChild(input);
-        controls.appendChild(row);
-    }
-
-    // Save functionality
-    document.getElementById('saveBtn').addEventListener('click', () => {
-        const htmlContent = `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Saved Grid</title>
-    <style>
-        ${document.querySelector('style').innerHTML}
-    </style>
-</head>
-<body>
-    ${document.querySelector('.container').outerHTML}
-    <script>
-        ${saveStateScript()}
-    <\/script>
-</body>
-</html>`;
-
-        const blob = new Blob([htmlContent], { type: 'text/html' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'grid_configuration.html';
-        a.click();
-        URL.revokeObjectURL(url);
+    const entries = Array.from(labels.entries()).filter(([key]) => {
+        const [x, y] = key.split(',').map(Number);
+        return !(x === 5 && y === 5);
     });
 
-    function saveStateScript() {
-        return `
-            document.addEventListener('DOMContentLoaded', () => {
-                const blocks = ${JSON.stringify(blocks)};
-                Object.entries(blocks).forEach(([id, text]) => {
-                    const block = document.getElementById(id);
-                    if (block) block.textContent = text;
-                });
-            });
+    entries.forEach(([key, value], index) => {
+        if (index % 3 === 0) {
+            tr = document.createElement('tr');
+        }
+
+        const [x, y] = key.split(',').map(Number);
+        const groupId = y * 11 + x + 1;
+        
+        const td = document.createElement('td');
+        td.innerHTML = `
+            <div>
+                <span>${groupId}:</span>
+                <input type="text" 
+                       maxlength="20" 
+                       data-x="${x}" 
+                       data-y="${y}"
+                       value="${value}">
+            </div>
         `;
+        
+        td.querySelector('input').addEventListener('input', updateLabel);
+        tr.appendChild(td);
+
+        if (index % 3 === 2 || index === entries.length - 1) {
+            tbody.appendChild(tr);
+        }
+    });
+}
+
+function updateLabel(e) {
+    const input = e.target;
+    const x = parseInt(input.dataset.x);
+    const y = parseInt(input.dataset.y);
+    const group = document.querySelector(`.group-overlay[style*="left: ${x * cellSize * 2}px"]`);
+    
+    if (group) {
+        group.textContent = input.value;
+        labels.set(`${x},${y}`, input.value);
     }
-});
+}
+
+function saveWebsite() {
+    const htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        ${document.documentElement.innerHTML}
+        </html>
+    `;
+    
+    const blob = new Blob([htmlContent], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'grid-editor.html';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
