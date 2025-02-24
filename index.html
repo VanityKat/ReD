@@ -3,24 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Grid Control</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Grid Fortress Editor</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
-        <div id="gridContainer"></div>
-        <div id="spreadsheet">
-            <table>
+        <div class="grid-container" id="gridContainer">
+            <div class="grid" id="mainGrid"></div>
+        </div>
+        <div class="spreadsheet-container">
+            <table id="spreadsheet">
                 <thead>
                     <tr>
-                        <th>Block ID</th>
-                        <th>Label</th>
+                        <th>Group 1</th>
+                        <th>Group 2</th>
+                        <th>Group 3</th>
                     </tr>
                 </thead>
-                <tbody id="controls"></tbody>
+                <tbody id="spreadsheetBody"></tbody>
             </table>
+            <button class="save-btn" onclick="saveWebsite()">Save All</button>
         </div>
-        <button id="saveBtn">Save Configuration</button>
     </div>
     <script src="script.js"></script>
 </body>
